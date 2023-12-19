@@ -1,15 +1,16 @@
 #include "plain.h"
 
-int main() {
+int main ()
+{
     CLEAR;
     Level level;
     int type;
-    std::cout <<    "Levels:\n" <<
-                    "1.Small(9x9,10 mines)\n" <<
-                    "2.Normal(16x16,40 mines)\n" <<
-                    "3.Large(16x30,99 mines)\n" <<
-                    "4.Custom(not working)\n"
-                    "Choose: ";
+    std::cout << "Levels:\n" <<
+              "1.Small(9x9,10 mines)\n" <<
+              "2.Normal(16x16,40 mines)\n" <<
+              "3.Large(16x30,99 mines)\n" <<
+              "4.Custom(not working)\n"
+              "Choose: ";
     std::cin >> type;
     switch (type) {
         case 1:

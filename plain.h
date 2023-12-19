@@ -19,70 +19,92 @@
 #define MARKED 1
 #define VISIBLE 2
 
-#ifdef _WIN64
+#ifdef _WIN32
 #define CLEAR system("CLS")
 #else
 #define CLEAR system("clear")
 #endif
 
-enum class Level : uint8_t {
+enum class Level : uint8_t
+{
     SMALL,
     NORMAL,
     LARGE,
     CUSTOM
 };
 
-enum class Status {
+enum class Status
+{
     RUNNING,
     WIN,
     LOSE
 };
 
-class Plain {
+class Plain
+{
 private:
     uint16_t height, width, rest, unmarked_mines;
     int number_of_mines;
-    int16_t** plain;
-    int8_t** visible;
-    std::set<std::pair<uint8_t,uint8_t>> free_cells;
+    int16_t **plain;
+    int8_t **visible;
+    std::set<std::pair<uint8_t, uint8_t>> free_cells;
     bool exploded_mine;
 public:
-    explicit Plain(Level level);
+    explicit Plain (Level level);
 
-    int16_t visibility(uint16_t x, uint16_t y);
-    bool is_visible(uint16_t x, uint16_t y);
-    void set_visibility(uint16_t x, uint16_t y, int8_t);
-    int16_t cell(uint16_t x, uint16_t y);
+    int16_t visibility (uint16_t x, uint16_t y);
 
-    void open(uint16_t x, uint16_t y);
-    void put_mark(uint16_t x, uint16_t y);
-    void remove_mark(uint16_t x, uint16_t y);
+    bool is_visible (uint16_t x, uint16_t y);
 
-    void show();
-    void show_revealed();
-    void show_visibility();
-    void set_mines();
-    void show_stats();
-    Status result();
+    void set_visibility (uint16_t x, uint16_t y, int8_t);
+
+    int16_t cell (uint16_t x, uint16_t y);
+
+    void open (uint16_t x, uint16_t y);
+
+    void put_mark (uint16_t x, uint16_t y);
+
+    void remove_mark (uint16_t x, uint16_t y);
+
+    void show ();
+
+    void show_revealed ();
+
+    void show_visibility ();
+
+    void set_mines ();
+
+    void show_stats ();
+
+    Status result ();
 };
 
-class SinglePlayer {
+class SinglePlayer
+{
 private:
     Plain plain;
     bool game_over;
 
-    void open_cell(uint16_t x, uint16_t y);
-    void put_mark(uint16_t x, uint16_t y);
-    void remove_mark(uint16_t x, uint16_t y);
-    void update();
+    void open_cell (uint16_t x, uint16_t y);
 
-    void show();
-    void show_revealed();
-    void show_visibility();
-    void end_of_game();
+    void put_mark (uint16_t x, uint16_t y);
+
+    void remove_mark (uint16_t x, uint16_t y);
+
+    void update ();
+
+    void show ();
+
+    void show_revealed ();
+
+    void show_visibility ();
+
+    void end_of_game ();
+
 public:
-    explicit SinglePlayer(Level level);
-    void run();
+    explicit SinglePlayer (Level level);
+
+    void run ();
 };
 
 #endif //MINESWEEPER_PLAIN_H
