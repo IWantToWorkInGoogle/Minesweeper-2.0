@@ -4,13 +4,6 @@
 
 #include "plain.h"
 
-#define MINE (-1)
-#define NO_NEIGHBOURS 0
-
-#define HIDDEN 0
-#define MARKED 1
-#define VISIBLE 2
-
 std::vector<std::pair<int16_t,int16_t>> pos = {
         {-1,-1},{0,-1},
         {1,-1},{1,0},
@@ -387,7 +380,7 @@ void SinglePlayer::end_of_game() {
 
 void SinglePlayer::run() {
     while (!game_over) {
-        system("CLS");
+        CLEAR;
         show();
         update();
         end_of_game();

@@ -1,7 +1,7 @@
 #include "plain.h"
 
 int main() {
-    system("CLS");
+    CLEAR;
     Level level;
     int type;
     std::cout <<    "Levels:\n" <<

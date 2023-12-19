@@ -12,17 +12,24 @@
 #include <random>
 #include <chrono>
 
+#define MINE (-1)
+#define NO_NEIGHBOURS 0
+
+#define HIDDEN 0
+#define MARKED 1
+#define VISIBLE 2
+
+#ifdef _WIN64
+#define CLEAR system("CLS")
+#else
+#define CLEAR system("clear")
+#endif
+
 enum class Level : uint8_t {
     SMALL,
     NORMAL,
     LARGE,
     CUSTOM
-};
-
-enum class Visibility : uint8_t {
-    HIDDEN,
-    FLAG,
-    VISIBLE
 };
 
 enum class Status {
