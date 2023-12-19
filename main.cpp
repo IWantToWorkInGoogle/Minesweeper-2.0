@@ -1,25 +1,25 @@
 #include "plain.h"
 
-
 int main() {
+    system("CLS");
     Level level;
     int type;
     std::cout <<    "Levels:\n" <<
-                    "1.Easy(9x9,10 mines)\n" <<
+                    "1.Small(9x9,10 mines)\n" <<
                     "2.Normal(16x16,40 mines)\n" <<
-                    "3.Hard(16x30,99 mines)\n" <<
+                    "3.Large(16x30,99 mines)\n" <<
                     "4.Custom(not working)\n"
                     "Choose: ";
     std::cin >> type;
     switch (type) {
         case 1:
-            level = Level::EASY;
+            level = Level::SMALL;
             break;
         case 2:
             level = Level::NORMAL;
             break;
         case 3:
-            level = Level::HARD;
+            level = Level::LARGE;
             break;
         case 4:
             level = Level::CUSTOM;

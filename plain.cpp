@@ -22,7 +22,7 @@ Plain::Plain(Level level)
 {
     switch (level)
     {
-        case Level::EASY:
+        case Level::SMALL:
             height = 9;
             width = 9;
             number_of_mines = 10;
@@ -32,7 +32,7 @@ Plain::Plain(Level level)
             width = 16;
             number_of_mines = 40;
             break;
-        case Level::HARD:
+        case Level::LARGE:
             height = 16;
             width = 30;
             number_of_mines = 99;
@@ -44,7 +44,9 @@ Plain::Plain(Level level)
             break;
     }
 
-    rest = height * width;
+    exploded_mine = false;
+    unmarked_mines = number_of_mines;
+    rest = height * width - number_of_mines;
 
     plain = new int16_t*[height];
     visible = new int8_t*[height];
@@ -53,7 +55,7 @@ Plain::Plain(Level level)
         plain[i] = new int16_t[width];
         visible[i] = new int8_t[width];
         std::fill(plain[i],plain[i] + width,0);
-        std::fill(visible[i],visible[i] + width,0);
+        std::fill(visible[i],visible[i] + width,HIDDEN);
     }
 
     for (uint16_t i = 0;i < height;i++)
@@ -67,11 +69,46 @@ Plain::Plain(Level level)
 
 void Plain::show_revealed()
 {
+    std::cout << "Revealed plain";
+    for (size_t i = 0;i < width;i++)
+    {
+        std::cout << ' ' << i / 10 << ' ';
+    }
+    std::cout << '\n';
+    for (size_t i = 0;i < width;i++)
+    {
+        std::cout << ' ' << i % 10 << ' ';
+    }
+    std::cout << '\n';
+
     for (size_t i = 0;i < height;i++)
     {
         for (size_t j = 0;j < width;j++)
         {
-            std::cout << plain[i][j] << ' ';
+            std::cout << '[';
+            switch (plain[i][j]) {
+                case MINE:
+                    std::cout << '*';
+                    break;
+                case NO_NEIGHBOURS:
+                    std::cout << ' ';
+                    break;
+                default:
+                    std::cout << char('0' + plain[i][j]);
+                    break;
+            }
+            std::cout << ']';
+        }
+        std::cout << ' ' << i << '\n';
+    }
+}
+
+void Plain::show_visibility() {
+    for (size_t i = 0;i < height;i++)
+    {
+        for (size_t j = 0;j < width;j++)
+        {
+            std::cout << (int)visible[i][j] << ' ';
         }
         std::cout << '\n';
     }
@@ -80,6 +117,18 @@ void Plain::show_revealed()
 void Plain::show()
 {
     std::cout << "Plain:\n";
+    for (size_t i = 0;i < width;i++)
+    {
+        std::cout << ' ' << i / 10 << ' ';
+    }
+    std::cout << '\n';
+    for (size_t i = 0;i < width;i++)
+    {
+        std::cout << ' ' << i % 10 << ' ';
+    }
+    std::cout << '\n';
+
+
     for (size_t i = 0;i < height;i++)
     {
         for (size_t j = 0;j < width;j++)
@@ -114,7 +163,7 @@ void Plain::show()
             }
             std::cout << ']';
         }
-        std::cout << '\n';
+        std::cout << ' ' << i << '\n';
     }
 }
 
@@ -178,14 +227,20 @@ int16_t Plain::cell(uint16_t x, uint16_t y)
     return plain[x][y];
 }
 
-bool Plain::open(uint16_t x, uint16_t y) {
+void Plain::open(uint16_t x, uint16_t y) {
+    if (visibility(x,y) == VISIBLE || visibility(x,y) == MARKED)
+    {
+        return;
+    }
     if (cell(x,y) == MINE)
     {
-        return false;
+        exploded_mine = true;
+        return;
     }
     std::queue<std::pair<int,int>> q;
     q.emplace(x,y);
     set_visibility(x,y,VISIBLE);
+    --rest;
     while (!q.empty()) {
         auto p1 = q.front();
         q.pop();
@@ -208,26 +263,53 @@ bool Plain::open(uint16_t x, uint16_t y) {
             {
                 q.emplace(x2,y2);
                 set_visibility(x2,y2,VISIBLE);
+                --rest;
             }
         }
     }
-    return true;
 }
 
-bool Plain::put_flag(uint16_t x, uint16_t y)
+void Plain::put_mark(uint16_t x, uint16_t y)
 {
     if (visibility(x,y) == VISIBLE || visibility(x,y) == MARKED)
     {
-        return false;
+        return;
     }
 
-
-
+    set_visibility(x,y,MARKED);
     if (cell(x,y) == MINE)
     {
-        return true;
+        --unmarked_mines;
     }
-    return false;
+}
+
+void Plain::remove_mark(uint16_t x, uint16_t y) {
+    if (visibility(x,y) == VISIBLE || visibility(x,y) == HIDDEN)
+    {
+        return;
+    }
+
+    set_visibility(x,y,HIDDEN);
+    if (cell(x,y) == MINE)
+    {
+        ++unmarked_mines;
+    }
+}
+
+Status Plain::result() {
+    if (!unmarked_mines && !rest)
+    {
+        return Status::WIN;
+    }
+    if (exploded_mine)
+    {
+        return Status::LOSE;
+    }
+    return Status::RUNNING;
+}
+
+void Plain::show_stats() {
+    std::cout << "Rest: " << rest << "\nUnmarked mines: " << unmarked_mines << "\nExploded mine: " << exploded_mine << '\n';
 }
 
 SinglePlayer::SinglePlayer(Level level) : plain(Plain(level)), game_over(false) {
@@ -236,19 +318,41 @@ SinglePlayer::SinglePlayer(Level level) : plain(Plain(level)), game_over(false) 
 
 void SinglePlayer::open_cell(uint16_t x, uint16_t y)
 {
-    if (plain.is_visible(x,y))
-    {
-        return;
-    }
-    game_over = !plain.open(x,y);
+    plain.open(x,y);
 }
 
-void SinglePlayer::put_flag(uint16_t x, uint16_t y) {
-    if (plain.is_visible(x,y))
-    {
-        return;
-    }
+void SinglePlayer::put_mark(uint16_t x, uint16_t y) {
+    plain.put_mark(x,y);
+}
 
+void SinglePlayer::remove_mark(uint16_t x, uint16_t y) {
+    plain.remove_mark(x,y);
+}
+
+void SinglePlayer::update() {
+    std::cout <<    "Operations:\n" <<
+                    "1.Open cell\n" <<
+                    "2.Put mark on cell\n" <<
+                    "3.Remove mark from cell\n" <<
+                    "Choose: ";
+    int op;
+    std::cin >> op;
+    std::cout << "Pick cell: \n";
+    uint16_t x,y;
+    std::cin >> x >> y;
+    switch (op) {
+        case 1:
+            open_cell(x,y);
+            break;
+        case 2:
+            put_mark(x,y);
+            break;
+        case 3:
+            remove_mark(x,y);
+            break;
+        default:
+            break;
+    }
 }
 
 void SinglePlayer::show() {
@@ -259,17 +363,33 @@ void SinglePlayer::show_revealed() {
     plain.show_revealed();
 }
 
-void SinglePlayer::run() {
-    std::cout.flush();
-    while (!game_over) {
-        std::cout.flush();
-        show();
-        //show_revealed();
-        std::cout << "Pick cell: \n";
-        uint16_t x,y;
-        std::cin >> x >> y;
-        open_cell(x,y);
-    }
+void SinglePlayer::show_visibility() {
+    plain.show_visibility();
+}
 
-    std::cout << "Game over\n";
+void SinglePlayer::end_of_game() {
+    Status status = plain.result();
+    if (status == Status::RUNNING)
+    {
+        return;
+    }
+    game_over = true;
+    std::cout << "Game over.\n";
+    if (status == Status::WIN)
+    {
+        std::cout << "YOU WIN!!!!!\n";
+    }
+    else
+    {
+        std::cout << "You lose.\n";
+    }
+}
+
+void SinglePlayer::run() {
+    while (!game_over) {
+        system("CLS");
+        show();
+        update();
+        end_of_game();
+    }
 }
